@@ -1,0 +1,14 @@
+{
+  "telepod": {
+    "port": 7019,
+    "remote": "localhost",
+    "password": "telepod"
+  },
+
+  "name": "electron",
+  "version": "0.0.0",
+  "description": "The local pod of Telepod.",
+  "main": "electron.js",
+  "scripts": { "start": "node electron.js" },
+  "engines": { "iojs": ">=1.0.3"}
+}
