@@ -3,6 +3,7 @@ var https = require('https');
 var util = require("util");
 var events = require("events");
 var crypto = require('crypto');
+var logger = require('./logger');
 
 
 var algorithm = 'aes128';
@@ -64,6 +65,7 @@ var app = http.createServer(function(req, res) {
     var darkMatter = new DarkMatter();
     darkMatter.on('metadata', function(metadata) {
       metadata = JSON.parse(metadata);
+      logger.debug(metadata);
       var options = {
         hostname: metadata.headers.host,
         path: metadata.url,
@@ -83,7 +85,7 @@ var app = http.createServer(function(req, res) {
       });
       var requestInfo = util.format('%s: %s://%s%s', options.method, metadata.scheme, options.hostname, options.path);
       request.on('error', function(err) {
-        console.error('%s with error: ', requestInfo, err);
+        logger.error('%s with error: ', requestInfo, err);
         req.socket.destroy();
       });
     });
@@ -111,13 +113,17 @@ var app = http.createServer(function(req, res) {
 
 app.on('clientError', function(exception, socket) {
   socket.destroy();
-  console.error(exception);
+  logger.error('clientError:', exception);
 });
 
 app.listen(port, host, function() {
-  console.log('App listening on: %s:%d', host, port);
+  var slogan = '';
+  slogan += '=============================================================\n';
+  slogan += '  App Listening on: %s:%d\n';
+  slogan += '=============================================================\n';
+  logger.log(slogan, host, port);
 });
 
 process.on('uncaughtException', function(err) {
-  console.error('Exception: ' + err.stack);
+  logger.error('Exception: ' + err.stack);
 });

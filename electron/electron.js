@@ -5,6 +5,7 @@ var util = require('util');
 var https = require('https');
 var crypto = require('crypto');
 var sni = require('./sni');
+var logger = require('../positron/logger');
 
 var packageJson = fs.readFileSync('package.json', {encoding: 'utf8'});
 packageJson = JSON.parse(packageJson);
@@ -13,14 +14,14 @@ TELEPOD.version = packageJson.version;
 
 var remote = {
   hostname: TELEPOD.remote,
-  port: 3000,
+  //port: 3000,
   path: '/_portal',
   method: 'POST'
 };
 
 var requestHandler = function(req, res, scheme) {
-  var url = util.format('%s://%s%s', scheme, req.headers.host, req.url);
-  console.log('request url:', url);
+  var requireInfo = util.format('%s://%s%s', scheme, req.headers.host, req.url);
+  logger.info(requireInfo);
 
   var request = http.request(remote, function(response) {
     res.statusCode = response.statusCode;
@@ -31,8 +32,8 @@ var requestHandler = function(req, res, scheme) {
     response.pipe(res);
   });
   request.on('error', function(err) {
-    console.error('request: %s with error: ', url, err);
     req.socket.destroy();
+    logger.error('%s with error: ', requireInfo, err);
   });
 
   var metadata = {
@@ -64,7 +65,7 @@ var secureServer = https.createServer({SNICallback: sni.SNICallbackFunc}, functi
 
 secureServer.on('clientError', function(exception, socket) {
   socket.destroy();
-  console.error(exception);
+  logger.error('clientError:', exception);
 });
 
 secureServer.listen(0, function() {
@@ -75,7 +76,7 @@ secureServer.listen(0, function() {
   });
 
   server.on('connect', function(req, socket, head) {
-    console.log('tunnel: ', req.url);
+    logger.debug('tunnel: ', req.url);
 
     var tunnel = net.connect(address.port, function() {
       socket.write('HTTP/1.1 200 OK\r\n\r\n');
@@ -86,12 +87,12 @@ secureServer.listen(0, function() {
   });
 
   server.on('error', function(error) {
-    console.error(error);
+    logger.error(error);
   });
 
   server.on('clientError', function(exception, socket) {
     socket.destroy();
-    console.log(exception);
+    logger.error('clientError:', exception);
   });
 
   server.listen(TELEPOD.port, function() {
@@ -101,7 +102,7 @@ secureServer.listen(0, function() {
     slogan += '  Listen          : %d\n';
     slogan += '  Remote          : %s\n';
     slogan += '=============================================================\n';
-    console.log(slogan, TELEPOD.version, TELEPOD.port, TELEPOD.remote);
+    logger.log(slogan, TELEPOD.version, TELEPOD.port, TELEPOD.remote);
   });
 
 });
