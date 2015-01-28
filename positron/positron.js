@@ -3,6 +3,7 @@ var https = require('https');
 var util = require("util");
 var events = require("events");
 var crypto = require('crypto');
+var zlib = require('zlib');
 var logger = require('./logger');
 
 
@@ -96,10 +97,13 @@ var app = http.createServer(function(req, res) {
       request.end();
     });
 
-    req.on('data', function(chunk) {
+    var decompress = zlib.createGunzip();
+    req.pipe(decompress);
+
+    decompress.on('data', function(chunk) {
       darkMatter.parse(chunk);
     });
-    req.on('end', function() {
+    decompress.on('end', function() {
       darkMatter.end();
     });
   } else if (/^\/$/.test(url)) {

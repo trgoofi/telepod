@@ -4,6 +4,7 @@ var fs = require('fs');
 var util = require('util');
 var https = require('https');
 var crypto = require('crypto');
+var zlib = require('zlib');
 var sni = require('./sni');
 var logger = require('../positron/logger');
 
@@ -50,13 +51,9 @@ var requestHandler = function(req, res, scheme) {
   buf.write(metadata, 4);
 
   var cipher = crypto.createCipher('aes128', TELEPOD.password);
-  request.write(cipher.update(buf));
-  req.on('data', function(chunk) {
-    request.write(cipher.update(chunk));
-  });
-  req.on('end', function() {
-    request.end(cipher.final());
-  });
+  cipher.pipe(zlib.createGzip()).pipe(request);
+  cipher.write(buf);
+  req.pipe(cipher);
 };
 
 var secureServer = https.createServer({SNICallback: sni.SNICallbackFunc}, function(req, res) {
