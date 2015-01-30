@@ -1,7 +1,7 @@
 var http = require('http');
 var https = require('https');
 var util = require("util");
-var events = require("events");
+var stream = require('stream');
 var crypto = require('crypto');
 var zlib = require('zlib');
 var logger = require('./logger');
@@ -14,17 +14,21 @@ var port = process.env.PORT || 3000;
 var host = process.env.IP || '127.0.0.1';
 
 
-function DarkMatter() {
-  events.EventEmitter.call(this);
+function DarkMatter(options) {
+  if (!(this instanceof DarkMatter)) {
+    return new DarkMatter(options);
+  }
+
+  stream.Transform.call(this, options);
   this._decipher = crypto.createDecipher(algorithm, password);
   this._bytesMetaNeeded = undefined;
   this._metadata = [];
 }
 
-util.inherits(DarkMatter, events.EventEmitter);
+util.inherits(DarkMatter, stream.Transform);
 
-DarkMatter.prototype.parse = function(data) {
-  var buf = this._decipher.update(data);
+DarkMatter.prototype._transform = function(chunk, encoding, callback) {
+  var buf = this._decipher.update(chunk);
 
   if (this._bytesMetaNeeded === undefined) {
     this._bytesMetaNeeded = buf.readUInt32BE(0);
@@ -37,27 +41,40 @@ DarkMatter.prototype.parse = function(data) {
 
     this._bytesMetaNeeded -= meta.length;
     if (this._bytesMetaNeeded == 0) {
-      this.emit('metadata', this._metadata.join(''));
+      this._emitMetadata();
 
       if (buf.length - meta.length > 0) {
-        this.emit('data', buf.slice(meta.length))
+        this.push(buf.slice(meta.length));
       }
     }
   } else {
-    this.emit('data', buf);
+    this.push(buf);
   }
+
+  callback();
 };
 
-DarkMatter.prototype.end = function() {
+DarkMatter.prototype._flush = function(callback) {
   var data = this._decipher.final();
   if (this._bytesMetaNeeded > 0) {
     this._metadata.push(data);
-    this.emit('metadata', this._metadata.join(''));
+    this._emitMetadata();
   } else {
-    this.emit('data', data);
+    this.push(data);
   }
-  this.emit('end');
+
+  callback();
 };
+
+DarkMatter.prototype._emitMetadata = function() {
+  try {
+    var metadata = JSON.parse(this._metadata.join(''));
+    this.emit('metadata', metadata);
+  } catch (err) {
+    this.emit('error', new Error('invalid metadata'));
+  }
+};
+
 
 var app = http.createServer(function(req, res) {
   var url = req.url;
@@ -65,7 +82,6 @@ var app = http.createServer(function(req, res) {
     var request;
     var darkMatter = new DarkMatter();
     darkMatter.on('metadata', function(metadata) {
-      metadata = JSON.parse(metadata);
       logger.debug(metadata);
       var options = {
         hostname: metadata.headers.host,
@@ -89,23 +105,11 @@ var app = http.createServer(function(req, res) {
         logger.error('%s with error: ', requestInfo, err);
         req.socket.destroy();
       });
-    });
-    darkMatter.on('data', function(data) {
-      request.write(data);
-    });
-    darkMatter.on('end', function() {
-      request.end();
+      darkMatter.pipe(request);
     });
 
     var decompress = zlib.createGunzip();
-    req.pipe(decompress);
-
-    decompress.on('data', function(chunk) {
-      darkMatter.parse(chunk);
-    });
-    decompress.on('end', function() {
-      darkMatter.end();
-    });
+    req.pipe(decompress).pipe(darkMatter);
   } else if (/^\/$/.test(url)) {
     res.statusCode = 200;
     res.end('Hello Telepod!');
