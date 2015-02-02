@@ -3,11 +3,12 @@ var net = require('net');
 var fs = require('fs');
 var util = require('util');
 var https = require('https');
-var crypto = require('crypto');
 var zlib = require('zlib');
 var url = require('url');
 var sni = require('./sni');
 var logger = require('../positron/logger');
+var matter = require('../positron/matter');
+
 
 var packageJson = fs.readFileSync('package.json', {encoding: 'utf8'});
 packageJson = JSON.parse(packageJson);
@@ -46,16 +47,8 @@ var requestHandler = function(req, res, scheme) {
     headers: req.headers
   };
 
-  metadata = JSON.stringify(metadata);
-  var length = Buffer.byteLength(metadata);
-  var buf = new Buffer(length + 4);
-  buf.writeUInt32BE(length);
-  buf.write(metadata, 4);
-
-  var cipher = crypto.createCipher('aes128', TELEPOD.password);
-  cipher.pipe(zlib.createGzip()).pipe(request);
-  cipher.write(buf);
-  req.pipe(cipher);
+  var darkmatter = matter.createDarkmatter({algorithm: 'aes128', password: TELEPOD.password, metadata: metadata});
+  req.pipe(darkmatter).pipe(zlib.createGzip()).pipe(request);
 };
 
 var secureServer = https.createServer({SNICallback: sni.SNICallbackFunc}, function(req, res) {

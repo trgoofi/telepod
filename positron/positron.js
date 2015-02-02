@@ -3,7 +3,7 @@ var https = require('https');
 var util = require("util");
 var zlib = require('zlib');
 var logger = require('./logger');
-var dm = require('./darkmatter');
+var matter = require('./matter');
 
 
 var algorithm = 'aes128';
@@ -16,8 +16,8 @@ var host = process.env.IP || '127.0.0.1';
 var app = http.createServer(function(req, res) {
   var url = req.url;
   if (/^\/_portal/.test(url)) {
-    var darkMatter = dm.createDarkMatter({algorithm: algorithm, password: password});
-    darkMatter.on('metadata', function(metadata) {
+    var antimatter = matter.createAntimatter({algorithm: algorithm, password: password});
+    antimatter.on('metadata', function(metadata) {
       logger.debug(metadata);
       var options = {
         hostname: metadata.headers.host,
@@ -41,11 +41,11 @@ var app = http.createServer(function(req, res) {
         logger.error('%s with error: ', requestInfo, err);
         req.socket.destroy();
       });
-      darkMatter.pipe(request);
+      antimatter.pipe(request);
     });
 
     var decompress = zlib.createGunzip();
-    req.pipe(decompress).pipe(darkMatter);
+    req.pipe(decompress).pipe(antimatter);
   } else if (/^\/$/.test(url)) {
     res.statusCode = 200;
     res.end('Hello Telepod!');
