@@ -1,10 +1,9 @@
 var http = require('http');
 var https = require('https');
 var util = require("util");
-var stream = require('stream');
-var crypto = require('crypto');
 var zlib = require('zlib');
 var logger = require('./logger');
+var dm = require('./darkmatter');
 
 
 var algorithm = 'aes128';
@@ -14,73 +13,10 @@ var port = process.env.PORT || 3000;
 var host = process.env.IP || '127.0.0.1';
 
 
-function DarkMatter(options) {
-  if (!(this instanceof DarkMatter)) {
-    return new DarkMatter(options);
-  }
-
-  stream.Transform.call(this, options);
-  this._decipher = crypto.createDecipher(algorithm, password);
-  this._bytesMetaNeeded = undefined;
-  this._metadata = [];
-}
-
-util.inherits(DarkMatter, stream.Transform);
-
-DarkMatter.prototype._transform = function(chunk, encoding, callback) {
-  var buf = this._decipher.update(chunk);
-
-  if (this._bytesMetaNeeded === undefined) {
-    this._bytesMetaNeeded = buf.readUInt32BE(0);
-    buf = buf.slice(4)
-  }
-
-  if (this._bytesMetaNeeded > 0) {
-    var meta = buf.slice(0, this._bytesMetaNeeded);
-    this._metadata.push(meta.toString());
-
-    this._bytesMetaNeeded -= meta.length;
-    if (this._bytesMetaNeeded == 0) {
-      this._emitMetadata();
-
-      if (buf.length - meta.length > 0) {
-        this.push(buf.slice(meta.length));
-      }
-    }
-  } else {
-    this.push(buf);
-  }
-
-  callback();
-};
-
-DarkMatter.prototype._flush = function(callback) {
-  var data = this._decipher.final();
-  if (this._bytesMetaNeeded > 0) {
-    this._metadata.push(data);
-    this._emitMetadata();
-  } else {
-    this.push(data);
-  }
-
-  callback();
-};
-
-DarkMatter.prototype._emitMetadata = function() {
-  try {
-    var metadata = JSON.parse(this._metadata.join(''));
-    this.emit('metadata', metadata);
-  } catch (err) {
-    this.emit('error', new Error('invalid metadata'));
-  }
-};
-
-
 var app = http.createServer(function(req, res) {
   var url = req.url;
   if (/^\/_portal/.test(url)) {
-    var request;
-    var darkMatter = new DarkMatter();
+    var darkMatter = dm.createDarkMatter({algorithm: algorithm, password: password});
     darkMatter.on('metadata', function(metadata) {
       logger.debug(metadata);
       var options = {
@@ -90,7 +26,7 @@ var app = http.createServer(function(req, res) {
         headers: metadata.headers
       };
       var client = metadata.scheme === 'https' ? https : http;
-      request = client.request(options, function(response) {
+      var request = client.request(options, function(response) {
         res.statusCode = response.statusCode;
         var headers = response.headers;
         for (var name in headers) {
