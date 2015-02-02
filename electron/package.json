@@ -1,7 +1,7 @@
 {
   "telepod": {
     "port": 7010,
-    "remote": "localhost",
+    "remote": "http://localhost:3000",
     "password": "telepod"
   },
 

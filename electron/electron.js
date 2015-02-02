@@ -5,6 +5,7 @@ var util = require('util');
 var https = require('https');
 var crypto = require('crypto');
 var zlib = require('zlib');
+var url = require('url');
 var sni = require('./sni');
 var logger = require('../positron/logger');
 
@@ -12,10 +13,11 @@ var packageJson = fs.readFileSync('package.json', {encoding: 'utf8'});
 packageJson = JSON.parse(packageJson);
 var TELEPOD = packageJson.telepod || {};
 TELEPOD.version = packageJson.version;
+var remoteOptions = url.parse(TELEPOD.remote);
 
 var remote = {
-  hostname: TELEPOD.remote,
-  //port: 3000,
+  hostname: remoteOptions.hostname,
+  port: remoteOptions.port,
   path: '/_portal',
   method: 'POST'
 };
