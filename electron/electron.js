@@ -10,6 +10,8 @@ var logger = require('../positron/logger');
 var matter = require('../positron/matter');
 
 
+var algorithm = 'aes128';
+
 var packageJson = fs.readFileSync('package.json', {encoding: 'utf8'});
 packageJson = JSON.parse(packageJson);
 var TELEPOD = packageJson.telepod || {};
@@ -24,21 +26,30 @@ var remote = {
 };
 
 var requestHandler = function(req, res, scheme) {
-  var requireInfo = util.format('%s://%s%s', scheme, req.headers.host, req.url);
+  var requireInfo = util.format('%s %s://%s%s', req.method, scheme, req.headers.host, req.url);
   logger.info(requireInfo);
 
-  var request = http.request(remote, function(response) {
-    res.statusCode = response.statusCode;
-    var headers = response.headers;
-    for (var name in headers) {
-      res.setHeader(name, headers[name]);
-    }
-    response.pipe(res);
-  });
-  request.on('error', function(err) {
+  var onError = function(err) {
     req.socket.destroy();
     logger.error('%s with error: ', requireInfo, err);
-  });
+  };
+
+  var onResponse = function(response) {
+    res.statusCode = response.statusCode;
+    var onMetadata = function (metadata) {
+      var headers = metadata.headers;
+      for (var name in headers) {
+        res.setHeader(name, headers[name]);
+      }
+      logger.debug(headers);
+    };
+
+    var antimatter = matter.createAntimatter({algorithm: algorithm, password: TELEPOD.password});
+    antimatter.on('metadata', onMetadata);
+    response.pipe(zlib.createGunzip()).pipe(antimatter).pipe(res);
+  };
+
+  var request = http.request(remote, onResponse).on('error', onError);
 
   var metadata = {
     url: req.url,
@@ -47,7 +58,7 @@ var requestHandler = function(req, res, scheme) {
     headers: req.headers
   };
 
-  var darkmatter = matter.createDarkmatter({algorithm: 'aes128', password: TELEPOD.password, metadata: metadata});
+  var darkmatter = matter.createDarkmatter({algorithm: algorithm, password: TELEPOD.password, metadata: metadata});
   req.pipe(darkmatter).pipe(zlib.createGzip()).pipe(request);
 };
 
