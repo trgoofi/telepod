@@ -35,8 +35,10 @@ var requestHandler = function(req, res, scheme) {
   };
 
   var onResponse = function(response) {
-    res.statusCode = response.statusCode;
     var onMetadata = function (metadata) {
+      res.statusCode = metadata.statusCode;
+      res.statusMessage = metadata.statusMessage;
+
       var headers = metadata.headers;
       for (var name in headers) {
         res.setHeader(name, headers[name]);

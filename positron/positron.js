@@ -33,9 +33,9 @@ var app = http.createServer(function(req, res) {
       };
 
       var onResponse = function(response) {
-        res.statusCode = response.statusCode;
-
         var metadata = {
+          statusCode: response.statusCode,
+          statusMessage: response.statusMessage,
           headers: response.headers
         };
         logger.debug('response', metadata);
