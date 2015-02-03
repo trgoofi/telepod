@@ -51,7 +51,8 @@ var requestHandler = function(req, res, scheme) {
     response.pipe(zlib.createGunzip()).pipe(antimatter).pipe(res);
   };
 
-  var request = http.request(remote, onResponse).on('error', onError);
+  var client = remoteOptions.protocol === 'https' ? https : http;
+  var request = client.request(remote, onResponse).on('error', onError);
 
   var metadata = {
     url: req.url,
