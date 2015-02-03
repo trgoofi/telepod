@@ -9,50 +9,50 @@ function Antimatter(options) {
   }
 
   stream.Transform.call(this, options);
-  this._decipher = crypto.createDecipher(options.algorithm, options.password);
+
+  var self = this;
   this._bytesMetaNeeded = undefined;
   this._metadata = [];
+
+  this._decipher = crypto.createDecipher(options.algorithm, options.password);
+  this._decipher.on('data', function(chunk) {
+    var buff = chunk;
+
+    if (self._bytesMetaNeeded === undefined) {
+      self._bytesMetaNeeded = buff.readUInt32BE(0);
+      buff = buff.slice(4)
+    }
+
+    if (self._bytesMetaNeeded > 0) {
+      var meta = buff.slice(0, self._bytesMetaNeeded);
+      self._metadata.push(meta.toString());
+
+      self._bytesMetaNeeded -= meta.length;
+      if (self._bytesMetaNeeded == 0) {
+        self._emitMetadata();
+
+        if (buff.length - meta.length > 0) {
+          self.push(buff.slice(meta.length));
+        }
+      }
+    } else {
+      self.push(buff);
+    }
+  });
 }
 
 util.inherits(Antimatter, stream.Transform);
 
 Antimatter.prototype._transform = function(chunk, encoding, callback) {
-  var buf = this._decipher.update(chunk);
-
-  if (this._bytesMetaNeeded === undefined) {
-    this._bytesMetaNeeded = buf.readUInt32BE(0);
-    buf = buf.slice(4)
-  }
-
-  if (this._bytesMetaNeeded > 0) {
-    var meta = buf.slice(0, this._bytesMetaNeeded);
-    this._metadata.push(meta.toString());
-
-    this._bytesMetaNeeded -= meta.length;
-    if (this._bytesMetaNeeded == 0) {
-      this._emitMetadata();
-
-      if (buf.length - meta.length > 0) {
-        this.push(buf.slice(meta.length));
-      }
-    }
-  } else {
-    this.push(buf);
-  }
-
-  callback();
+  this._decipher.write(chunk, function() {
+    callback();
+  });
 };
 
 Antimatter.prototype._flush = function(callback) {
-  var data = this._decipher.final();
-  if (this._bytesMetaNeeded > 0) {
-    this._metadata.push(data);
-    this._emitMetadata();
-  } else {
-    this.push(data);
-  }
-
-  callback();
+  this._decipher.end(function() {
+    callback();
+  });
 };
 
 Antimatter.prototype._emitMetadata = function() {
@@ -71,7 +71,13 @@ function Darkmatter(options) {
   }
 
   stream.Transform.call(this, options);
+
+  var self = this;
   this._cipher = crypto.createCipher(options.algorithm, options.password);
+  this._cipher.on('data', function(chunk) {
+    self.push(chunk);
+  });
+
   if (!options.metadata) {
     throw new TypeError('metadata must be provided');
   }
@@ -86,18 +92,19 @@ Darkmatter.prototype._pushMetadata = function(metadata) {
   var buff = new Buffer(length + 4);
   buff.writeUInt32BE(length);
   buff.write(metadata, 4);
-  var cbuff = this._cipher.update(buff);
-  this.push(cbuff);
+  this._cipher.write(buff);
 };
 
 Darkmatter.prototype._transform = function(chunk, encoding, callback) {
-  this.push(this._cipher.update(chunk));
-  callback();
+  this._cipher.write(chunk, function() {
+    callback();
+  });
 };
 
 Darkmatter.prototype._flush = function(callback) {
-  this.push(this._cipher.final());
-  callback();
+  this._cipher.end(function() {
+    callback();
+  });
 };
 
 

@@ -28,7 +28,7 @@ var app = http.createServer(function(req, res) {
 
       var onError = function(err) {
         req.socket.destroy();
-        var requestInfo = util.format('%s: %s://%s%s', metadata.method, metadata.scheme, metadata.hostname, metadata.url);
+        var requestInfo = util.format('%s: %s://%s%s', metadata.method, metadata.scheme, metadata.headers.host, metadata.url);
         logger.error('%s with error: ', requestInfo, err);
       };
 
