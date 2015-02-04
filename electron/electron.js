@@ -46,9 +46,15 @@ var requestHandler = function(req, res, scheme) {
       logger.debug(headers);
     };
 
-    var antimatter = matter.createAntimatter({algorithm: algorithm, password: TELEPOD.password});
-    antimatter.on('metadata', onMetadata);
-    response.pipe(zlib.createGunzip()).pipe(antimatter).pipe(res);
+    if (response.statusCode === 200) {
+      var antimatter = matter.createAntimatter({algorithm: algorithm, password: TELEPOD.password});
+      antimatter.on('metadata', onMetadata);
+      response.pipe(zlib.createGunzip()).pipe(antimatter).pipe(res);
+    } else {
+      onMetadata({statusCode: response.statusCode, statusMessage: response.statusMessage, headers:response.headers});
+      response.pipe(res);
+    }
+
   };
 
   remote.path = remote.path + Math.random().toString(36).slice(2);
