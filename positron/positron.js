@@ -15,7 +15,7 @@ var host = process.env.IP || '127.0.0.1';
 
 var app = http.createServer(function(req, res) {
   var url = req.url;
-  if (/^\/_portal/.test(url)) {
+  if (/^\/portal/.test(url)) {
     var onMetadata = function(metadata) {
       logger.debug(metadata);
 
