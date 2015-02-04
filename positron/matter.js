@@ -90,7 +90,7 @@ Darkmatter.prototype._pushMetadata = function(metadata) {
   metadata = JSON.stringify(metadata);
   var length = Buffer.byteLength(metadata);
   var buff = new Buffer(length + 4);
-  buff.writeUInt32BE(length);
+  buff.writeUInt32BE(length, 0);
   buff.write(metadata, 4);
   this._cipher.write(buff);
 };
