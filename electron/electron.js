@@ -54,10 +54,9 @@ var requestHandler = function(req, res, scheme) {
       onMetadata({statusCode: response.statusCode, statusMessage: response.statusMessage, headers:response.headers});
       response.pipe(res);
     }
-
   };
 
-  remote.path = remote.path + Math.random().toString(36).slice(2);
+  remote.path = remote.path + Math.random().toString(36).slice(2, 50);
   var client = remoteOptions.protocol === 'https' ? https : http;
   var request = client.request(remote, onResponse).on('error', onError);
 
