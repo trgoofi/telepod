@@ -14,7 +14,12 @@ function Antimatter(options) {
   this._bytesMetaNeeded = undefined;
   this._metadata = [];
 
-  this._decipher = crypto.createDecipher(options.algorithm, options.password);
+  if (options.cipherMode === 'none') {
+    this._decipher = new stream.PassThrough();
+  } else {
+    this._decipher = crypto.createDecipher(options.algorithm, options.password);
+  }
+
   this._decipher.on('data', function(chunk) {
     var buff = chunk;
 
@@ -73,7 +78,13 @@ function Darkmatter(options) {
   stream.Transform.call(this, options);
 
   var self = this;
-  this._cipher = crypto.createCipher(options.algorithm, options.password);
+
+  if (options.cipherMode === 'none') {
+    this._cipher = new stream.PassThrough();
+  } else {
+    this._cipher = crypto.createCipher(options.algorithm, options.password);
+  }
+
   this._cipher.on('data', function(chunk) {
     self.push(chunk);
   });
