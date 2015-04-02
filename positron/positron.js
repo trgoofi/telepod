@@ -15,7 +15,10 @@ var host = process.env.IP || '127.0.0.1';
 
 var app = http.createServer(function(req, res) {
   var url = req.url;
-  if (/^\/portal/.test(url)) {
+  if (/^\/$/.test(url)) {
+    res.statusCode = 200;
+    res.end('Hello Telepod!');
+  } else if (req.method === 'POST') {
     var onMetadata = function(metadata) {
       logger.debug(metadata);
 
@@ -53,12 +56,9 @@ var app = http.createServer(function(req, res) {
     antimatter.on('metadata', onMetadata);
     req.pipe(zlib.createGunzip()).pipe(antimatter);
 
-  } else if (/^\/$/.test(url)) {
+  } else {
     res.statusCode = 200;
     res.end('Hello Telepod!');
-  } else {
-    res.statusCode = 404;
-    res.end('404 Not Found.');
   }
 });
 

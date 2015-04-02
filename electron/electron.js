@@ -21,7 +21,7 @@ var remoteOptions = url.parse(TELEPOD.remote);
 var remote = {
   hostname: remoteOptions.hostname,
   port: remoteOptions.port,
-  pathPrefix: '/portal',
+  portal: '/',
   method: 'POST'
 };
 
@@ -56,7 +56,7 @@ var requestHandler = function(req, res, scheme) {
     }
   };
 
-  remote.path = remote.pathPrefix + Math.random().toString(36).slice(2, 50);
+  remote.path = remote.portal + Math.random().toString(36).slice(2, 50);
   var client = remoteOptions.protocol === 'https' ? https : http;
   var request = client.request(remote, onResponse).on('error', onError);
 
