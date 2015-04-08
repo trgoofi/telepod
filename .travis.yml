@@ -1,0 +1,16 @@
+language: node_js
+
+node_js:
+  - 'iojs'
+
+before_install:
+  - node --version
+  - npm --version
+
+install:
+  - cd electron/hadron
+  - pwd
+  - npm install
+
+script:
+  - npm test
