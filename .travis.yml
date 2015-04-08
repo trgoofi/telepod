@@ -4,12 +4,13 @@ node_js:
   - 'iojs'
 
 before_install:
+  - if [ $TRAVIS_OS_NAME == linux ]; then sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update; fi
+  - if [ $TRAVIS_OS_NAME == linux ] && [ "$CXX" == "g++" ]; then sudo apt-get install g++-4.8 && export CXX="g++-4.8" CC="gcc-4.8"; fi
   - node --version
   - npm --version
 
 install:
-  - cd electron/hadron
-  - pwd
+  - cd electron/hadron && pwd
   - npm install
 
 script:
