@@ -5,7 +5,10 @@ node_js:
 
 before_install:
   - if [ $TRAVIS_OS_NAME == linux ]; then sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y && sudo apt-get update -qq; fi
-  - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get install -qq g++-4.8 && export CXX="g++-4.8" CC="gcc-4.8"; fi
+  - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get install -qq g++-4.8; fi
+  - if [ $TRAVIS_OS_NAME == linux ]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20; fi
+  - if [ $TRAVIS_OS_NAME == linux ]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20; fi
+
   - g++ --version
   - node --version
   - npm --version
