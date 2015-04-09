@@ -1,0 +1,20 @@
+environment:
+  nodejs_version: "1"
+
+platform:
+  - x64
+  - x86
+
+# Runs after repo cloning.
+install:
+  - ps: Install-Product node $env:nodejs_version $env:platform
+  - node --version
+  - npm --version
+
+# Run custom scripts instead of automatic MSBuild
+build_script:
+  - cd electron\hadron && cd
+  - npm install --msvs_version=2013
+
+test_script:
+  - npm test
