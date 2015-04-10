@@ -25,6 +25,27 @@
             'NS_BLOCK_ASSERTIONS'
           ], # defines
         }], # OS=="mac"
+        ['OS=="win"', {
+          'conditions': [
+            ['target_arch=="x64"', {
+              'variables': {
+                'openssl_root%': 'C:/OpenSSL-Win64',
+              }
+             },
+             {
+              'variables': {
+                'openssl_root%': 'C:/OpenSSL-Win32',
+              }
+             }
+            ], # target_arch=="x64"
+          ], # conditions
+          'libraries': [
+            '-l<(openssl_root)/lib/VC/static/libeay32MD.lib',
+          ],
+          'include_dirs': [
+            '<(openssl_root)/include',
+          ],
+        }], # OS=="win"
       ], # conditions
     }
   ]
