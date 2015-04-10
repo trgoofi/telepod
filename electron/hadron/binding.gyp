@@ -2,6 +2,7 @@
   'targets': [
     {
       'target_name': 'hadron',
+      'win_delay_load_hook': 'true',
       'sources': [ 'assemble.cc', 'forger.cc', 'cache.cc' ],
       'cflags_cc': [ '-std=gnu++11' ],
       'defines': [ 'NDEBUG' ],
