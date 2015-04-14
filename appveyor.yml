@@ -26,3 +26,6 @@ build_script:
 
 test_script:
   - npm test
+
+artifacts:
+  - path: build\Release\hadron.node
