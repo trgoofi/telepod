@@ -28,4 +28,4 @@ test_script:
   - npm test
 
 artifacts:
-  - path: electron\hadron\build\Release\hadron.node
+  - path: electron\hadron\*.node

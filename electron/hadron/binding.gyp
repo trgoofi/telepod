@@ -48,6 +48,20 @@
           ],
         }], # OS=="win"
       ], # conditions
+    }, # target hadron
+
+    {
+      'target_name': 'after-build',
+      'type': 'none',
+      'dependencies': [ 'hadron' ],
+      'actions': [
+        {
+          'action_name': 'deploy',
+          'inputs': [ 'build/Release/hadron.node' ],
+          'outputs': [ 'hadron-platform-arch.node' ],
+          'action': [ 'iojs', 'deploy.js' ],
+        }
+      ]
     }
   ]
 }
