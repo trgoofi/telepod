@@ -59,7 +59,7 @@
           'action_name': 'deploy',
           'inputs': [ 'build/Release/hadron.node' ],
           'outputs': [ 'hadron-platform-arch.node' ],
-          'action': [ 'iojs', 'deploy.js' ],
+          'action': [ 'node', 'deploy.js' ],
         }
       ]
     }
