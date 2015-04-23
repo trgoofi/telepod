@@ -5,9 +5,10 @@ var util = require('util');
 var https = require('https');
 var zlib = require('zlib');
 var url = require('url');
-var sni = require('./sni');
+var tls = require('tls');
 var logger = require('../positron/logger');
 var matter = require('../positron/matter');
+var hadron = require('./hadron/hadron-' + process.platform + '-' + process.arch);
 
 
 var algorithm = 'aes128';
@@ -71,7 +72,31 @@ var requestHandler = function(req, res, scheme) {
   req.pipe(darkmatter).pipe(zlib.createGzip()).pipe(request);
 };
 
-var secureServer = https.createServer({SNICallback: sni.SNICallbackFunc}, function(req, res) {
+var ca = fs.readFileSync('telepod.ca.pem');
+var key = fs.readFileSync('telepod.key.pem');
+
+var forger = hadron.createForger({ca: ca, key: key});
+var secureContextCache = hadron.createLRUCache(120);
+
+function SNICallbackFunc(hostname, callback) {
+  var ctx = secureContextCache.get(hostname);
+  if (ctx) {
+    callback(null, ctx);
+  } else {
+    forger.forgeCert(hostname, function(err, cert) {
+      if (!err) {
+        var details = {key: key, cert: cert};
+        var ctx = tls.createSecureContext(details);
+        secureContextCache.set(hostname, ctx);
+        callback(null, ctx);
+      } else {
+        callback(err);
+      }
+    });
+  }
+}
+
+var secureServer = https.createServer({SNICallback: SNICallbackFunc}, function(req, res) {
   requestHandler(req, res, 'https');
 });
 
