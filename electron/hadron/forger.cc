@@ -229,7 +229,7 @@ bool X509Forgery::CreateX509() {
   if (!X509_set_issuer_name(cert_x_, ca_name)) {
     return false;
   }
-  if (!X509_sign(cert_x_, forger_.ca_key_, EVP_sha1())) {
+  if (!X509_sign(cert_x_, forger_.ca_key_, EVP_sha256())) {
     return false;
   }
 
