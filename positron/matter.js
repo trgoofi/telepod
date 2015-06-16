@@ -25,7 +25,7 @@ function Antimatter(options) {
 
     if (self._bytesMetaNeeded === undefined) {
       self._bytesMetaNeeded = buff.readUInt32BE(0);
-      buff = buff.slice(4)
+      buff = buff.slice(4);
     }
 
     if (self._bytesMetaNeeded > 0) {
@@ -33,7 +33,7 @@ function Antimatter(options) {
       self._metadata.push(meta.toString());
 
       self._bytesMetaNeeded -= meta.length;
-      if (self._bytesMetaNeeded == 0) {
+      if (self._bytesMetaNeeded === 0) {
         self._emitMetadata();
 
         if (buff.length - meta.length > 0) {
