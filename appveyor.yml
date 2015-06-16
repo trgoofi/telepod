@@ -4,11 +4,11 @@ environment:
   matrix:
     - platform: x64
       openssl_pkg: "Win64OpenSSL-1_0_2a.exe"
-      openssl_url: "http://slproweb.com/download/Win64OpenSSL-1_0_2a.exe"
+      openssl_url: "http://slproweb.com/download/Win64OpenSSL-1_0_2c.exe"
 
     - platform: x86
       openssl_pkg: "Win32OpenSSL-1_0_2a.exe"
-      openssl_url: "http://slproweb.com/download/Win32OpenSSL-1_0_2a.exe"
+      openssl_url: "http://slproweb.com/download/Win32OpenSSL-1_0_2c.exe"
 
 # Runs after repo cloning.
 install:
