@@ -20,6 +20,9 @@ function Antimatter(options) {
     this._decipher = crypto.createDecipher(options.algorithm, options.password);
   }
 
+  this._decipher.on('error', function(error) {
+    self.emit('error', error);
+  });
   this._decipher.on('data', function(chunk) {
     var buff = chunk;
 
@@ -85,6 +88,9 @@ function Darkmatter(options) {
     this._cipher = crypto.createCipher(options.algorithm, options.password);
   }
 
+  this._cipher.on('error', function(error) {
+    self.emit('error', error);
+  });
   this._cipher.on('data', function(chunk) {
     self.push(chunk);
   });
