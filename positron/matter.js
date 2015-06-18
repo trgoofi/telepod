@@ -1,7 +1,14 @@
 var stream = require('stream');
 var crypto = require('crypto');
 var util = require("util");
+var zlib = require('zlib');
 
+
+function exposeErrorThrough(self) {
+  return function(error) {
+    self.emit('error', error);
+  };
+}
 
 function Antimatter(options) {
   if (!(this instanceof Antimatter)) {
@@ -20,9 +27,7 @@ function Antimatter(options) {
     this._decipher = crypto.createDecipher(options.algorithm, options.password);
   }
 
-  this._decipher.on('error', function(error) {
-    self.emit('error', error);
-  });
+  this._decipher.on('error', exposeErrorThrough(self));
   this._decipher.on('data', function(chunk) {
     var buff = chunk;
 
@@ -50,6 +55,17 @@ function Antimatter(options) {
 }
 
 util.inherits(Antimatter, stream.Transform);
+
+Antimatter.prototype.wire = function(source) {
+  var gunzip = zlib.createGunzip();
+  gunzip.on('error', exposeErrorThrough(this));
+  this._tail = source.pipe(gunzip).pipe(this);
+  return this;
+};
+
+Antimatter.prototype.to = function(destination) {
+  this._tail.pipe(destination);
+};
 
 Antimatter.prototype._transform = function(chunk, encoding, callback) {
   this._decipher.write(chunk, function() {
@@ -88,9 +104,7 @@ function Darkmatter(options) {
     this._cipher = crypto.createCipher(options.algorithm, options.password);
   }
 
-  this._cipher.on('error', function(error) {
-    self.emit('error', error);
-  });
+  this._cipher.on('error', exposeErrorThrough(self));
   this._cipher.on('data', function(chunk) {
     self.push(chunk);
   });
@@ -102,6 +116,17 @@ function Darkmatter(options) {
 }
 
 util.inherits(Darkmatter, stream.Transform);
+
+Darkmatter.prototype.wire = function(source) {
+  var gzip = zlib.createGzip();
+  gzip.on('error', exposeErrorThrough(this));
+  this._tail = source.pipe(this).pipe(gzip);
+  return this;
+};
+
+Darkmatter.prototype.to = function (destination) {
+  this._tail.pipe(destination);
+};
 
 Darkmatter.prototype._pushMetadata = function(metadata) {
   metadata = JSON.stringify(metadata);

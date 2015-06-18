@@ -1,7 +1,6 @@
 var http = require('http');
 var https = require('https');
 var util = require("util");
-var zlib = require('zlib');
 var logger = require('./logger');
 var matter = require('./matter');
 
@@ -44,17 +43,17 @@ var app = http.createServer(function(req, res) {
         logger.debug('response', metadata);
 
         var darkmatter = matter.createDarkmatter({algorithm: algorithm, password: password, metadata: metadata});
-        response.pipe(darkmatter).pipe(zlib.createGzip()).pipe(res);
+        darkmatter.wire(response).to(res);
       };
 
       var client = metadata.scheme === 'https' ? https : http;
       var request = client.request(options, onResponse).on('error', onError);
-      this.pipe(request);
+      this.to(request);
     };
 
     var antimatter = matter.createAntimatter({algorithm: algorithm, password: password});
     antimatter.on('metadata', onMetadata);
-    req.pipe(zlib.createGunzip()).pipe(antimatter);
+    antimatter.wire(req);
 
   } else {
     res.statusCode = 200;

@@ -3,7 +3,6 @@ var net = require('net');
 var fs = require('fs');
 var util = require('util');
 var https = require('https');
-var zlib = require('zlib');
 var url = require('url');
 var tls = require('tls');
 var logger = require('../positron/logger');
@@ -50,7 +49,7 @@ var requestHandler = function(req, res, scheme) {
     if (response.statusCode === 200) {
       var antimatter = matter.createAntimatter({algorithm: algorithm, password: TELEPOD.password});
       antimatter.on('metadata', onMetadata);
-      response.pipe(zlib.createGunzip()).pipe(antimatter).pipe(res);
+      antimatter.wire(response).to(res);
     } else {
       onMetadata({statusCode: response.statusCode, statusMessage: response.statusMessage, headers:response.headers});
       response.pipe(res);
@@ -69,7 +68,7 @@ var requestHandler = function(req, res, scheme) {
   };
 
   var darkmatter = matter.createDarkmatter({algorithm: algorithm, password: TELEPOD.password, metadata: metadata});
-  req.pipe(darkmatter).pipe(zlib.createGzip()).pipe(request);
+  darkmatter.wire(req).to(request);
 };
 
 var ca = fs.readFileSync('telepod.ca.pem');
