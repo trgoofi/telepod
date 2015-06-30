@@ -26,12 +26,12 @@ var remote = {
 };
 
 var requestHandler = function(req, res, scheme) {
-  var requireInfo = util.format('%s %s://%s%s', req.method, scheme, req.headers.host, req.url);
-  logger.info(requireInfo);
+  var requestInfo = util.format('%s %s://%s%s', req.method, scheme, req.headers.host, req.url);
+  logger.info(requestInfo);
 
   var onError = function(err) {
     req.socket.destroy();
-    logger.error('%s with error: ', requireInfo, err);
+    logger.error('%s with error: ', requestInfo, err);
   };
 
   var onResponse = function(response) {
