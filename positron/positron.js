@@ -28,9 +28,11 @@ var app = http.createServer(function(req, res) {
         headers: metadata.headers
       };
 
+      var requestInfo = util.format('%s: %s://%s%s', metadata.method, metadata.scheme, metadata.headers.host, metadata.url);
+      this.id = requestInfo;
+
       var onError = function(err) {
         req.socket.destroy();
-        var requestInfo = util.format('%s: %s://%s%s', metadata.method, metadata.scheme, metadata.headers.host, metadata.url);
         logger.error('%s with error: ', requestInfo, err);
       };
 
@@ -42,7 +44,12 @@ var app = http.createServer(function(req, res) {
         };
         logger.debug('response', metadata);
 
-        var darkmatter = matter.createDarkmatter({algorithm: algorithm, password: password, metadata: metadata});
+        var darkmatter = matter.createDarkmatter({algorithm: algorithm, password: password, metadata: metadata, id: requestInfo});
+        darkmatter.on('error', function(error) {
+          response.socket.destroy();
+          req.socket.destroy();
+          logger.error('Darkmatter %s', this.id, error);
+        });
         darkmatter.wire(response).to(res);
       };
 
@@ -53,6 +60,10 @@ var app = http.createServer(function(req, res) {
 
     var antimatter = matter.createAntimatter({algorithm: algorithm, password: password});
     antimatter.on('metadata', onMetadata);
+    antimatter.on('error', function(error) {
+      req.socket.destroy();
+      logger.error('Antimatter %s', this.id, error);
+    });
     antimatter.wire(req);
 
   } else {

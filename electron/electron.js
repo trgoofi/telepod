@@ -47,8 +47,13 @@ var requestHandler = function(req, res, scheme) {
     };
 
     if (response.statusCode === 200) {
-      var antimatter = matter.createAntimatter({algorithm: algorithm, password: TELEPOD.password});
+      var antimatter = matter.createAntimatter({algorithm: algorithm, password: TELEPOD.password, id: requestInfo});
       antimatter.on('metadata', onMetadata);
+      antimatter.on('error', function(error) {
+        response.socket.destroy();
+        req.socket.destroy();
+        logger.error('Antimatter %s ', this.id, error);
+      });
       antimatter.wire(response).to(res);
     } else {
       onMetadata({statusCode: response.statusCode, statusMessage: response.statusMessage, headers:response.headers});
@@ -67,7 +72,11 @@ var requestHandler = function(req, res, scheme) {
     headers: req.headers
   };
 
-  var darkmatter = matter.createDarkmatter({algorithm: algorithm, password: TELEPOD.password, metadata: metadata});
+  var darkmatter = matter.createDarkmatter({algorithm: algorithm, password: TELEPOD.password, metadata: metadata, id: requestInfo});
+  darkmatter.on('error', function(error) {
+    req.socket.destroy();
+    logger.error('Darkmatter %s', this.id, error);
+  });
   darkmatter.wire(req).to(request);
 };
 
