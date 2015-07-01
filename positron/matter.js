@@ -20,6 +20,7 @@ function Antimatter(options) {
   var self = this;
   this._bytesMetaNeeded = undefined;
   this._metadata = [];
+  this.id = options.id;
 
   if (options.cipherMode === 'none') {
     this._decipher = new stream.PassThrough();
@@ -97,6 +98,7 @@ function Darkmatter(options) {
   stream.Transform.call(this, options);
 
   var self = this;
+  this.id = options.id;
 
   if (options.cipherMode === 'none') {
     this._cipher = new stream.PassThrough();
