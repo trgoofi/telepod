@@ -31,13 +31,10 @@ class Forger : public node::ObjectWrap {
   static void ForgeCert(const v8::FunctionCallbackInfo<v8::Value>& args);
   static v8::Persistent<v8::Function> constructor;
 
-  long NextSerialNumber() const {
-    return ++serial_number_;
-  };
+  long NextSerialNumber() const;
 
   X509* ca_cert_;
   EVP_PKEY* ca_key_;
-  mutable long serial_number_ = 7010000;
   long valid_days_ = 3650 * (60 * 60 * 24);
 
 };

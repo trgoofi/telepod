@@ -1,5 +1,7 @@
 #include "forger.h"
 
+#include <chrono>
+
 #include <openssl/pem.h>
 #include <openssl/err.h>
 
@@ -161,6 +163,14 @@ void Forger::ForgeCert(const FunctionCallbackInfo<Value> &args) {
   Local<Value> argv[argc] = { error, cert };
   Local<Function> callback = Local<Function>::Cast(args[1]);
   callback->Call(isolate->GetCurrentContext()->Global(), argc, argv);
+}
+
+
+long Forger::NextSerialNumber() const {
+  using namespace std::chrono;
+  time_point<system_clock> now = system_clock::now();
+  long sn = duration_cast<milliseconds>(now.time_since_epoch()).count();
+  return sn;
 }
 
 
