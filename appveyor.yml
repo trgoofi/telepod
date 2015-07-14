@@ -10,7 +10,7 @@ environment:
 
 # Runs after repo cloning.
 install:
-  - ps: Start-FileDownload "http://slproweb.com/download/" + $env:openssl_pkg
+  - ps: Start-FileDownload "http://slproweb.com/download/$env:openssl_pkg"
   - ps: Start-Process $env:openssl_pkg -ArgumentList "/verysilent /suppressmsgboxes" -Wait
 
   - ps: Install-Product node $env:nodejs_version $env:platform
