@@ -3,16 +3,14 @@ environment:
 
   matrix:
     - platform: x64
-      openssl_pkg: "Win64OpenSSL-1_0_2c.exe"
-      openssl_url: "http://slproweb.com/download/Win64OpenSSL-1_0_2c.exe"
+      openssl_pkg: "Win64OpenSSL-1_0_2d.exe"
 
     - platform: x86
-      openssl_pkg: "Win32OpenSSL-1_0_2c.exe"
-      openssl_url: "http://slproweb.com/download/Win32OpenSSL-1_0_2c.exe"
+      openssl_pkg: "Win32OpenSSL-1_0_2d.exe"
 
 # Runs after repo cloning.
 install:
-  - ps: Start-FileDownload $env:openssl_url
+  - ps: Start-FileDownload "http://slproweb.com/download/" + $env:openssl_pkg
   - ps: Start-Process $env:openssl_pkg -ArgumentList "/verysilent /suppressmsgboxes" -Wait
 
   - ps: Install-Product node $env:nodejs_version $env:platform
