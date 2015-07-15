@@ -1,6 +1,6 @@
 {
   "name": "positron",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "description": "The remote pod of Telepod.",
   "main": "positron.js",
   "scripts": { "start": "node positron.js" }
