@@ -15,8 +15,7 @@ The Author(s) Of Telepod Is(Are) Not Responsible For Any Violations You Make. It
 
 ### electron:
 
-  * [io.js][io.js] >= 1.0.3
-  * [Node.js][Node.js] >= 0.12.0 might work.
+  * 2.x <= [io.js][io.js] < 3.x
 
 ### positron:
 
@@ -27,17 +26,20 @@ The Author(s) Of Telepod Is(Are) Not Responsible For Any Violations You Make. It
 ## Start Guide
 
   1. Download [Telepod][Telepod_releases].
-  2. Install io.js or Node.js.
+  2. Install [io.js][io.js] or [Node.js][Node.js].
   3. Deploy `positron` pod.
     1. Change `port` and `host` in `positron/positron.js`.
     2. You might want to change the `password` too.
     3. Deploy `positron` pod. `positron` is self contained that means  deploy all the files under `positron` are enough.
     4. Start `positron` with `npm start` under `path/to/positron/` in the Terminal.
   4. Start `electron`.
-    1. Change the `remote` option in `electron/package.json` to the `positron` url that you just deployed.
-    2. Also change the `password` to match the one you set in `positron/positron.js`.
-    3. Start `electron` with `npm start` under `path/to/telepod/electron/` in the Terminal.
-    4. Route your net traffics to `electron`. Default would be `http://localhost:7010`.
+    1. Import certificate.
+      1. Windows: double click or right click `import.ca.bat` Run as administrator.
+      2. Mac OSX: double click `telepod.ca.pem` then follow the Keychain Access setup wizard.
+    2. Change the `remote` option in `electron/package.json` to the `positron` url that you just deployed.
+    3. Also change the `password` to match the one you set in `positron/positron.js`.
+    4. Start `electron` with `npm start` under `path/to/telepod/electron/` in the Terminal.
+    5. Route your net traffics to `electron`. Default server would be `http://localhost:7010`.
   5. All set. Have Fun!
 
 
